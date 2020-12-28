@@ -135,7 +135,7 @@ def hot_softmax(y, dim=0, temperature=1.0):
     """
     # TODO: Implement based on the above.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    result = torch.softmax(y/temperature, dim)
     # ========================
     return result
 
@@ -171,7 +171,17 @@ def generate_from_model(model, start_sequence, n_chars, char_maps, T):
     #  necessary for this. Best to disable tracking for speed.
     #  See torch.no_grad().
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    one_hot, h = chars_to_onehot(start_sequence, char_to_idx).to(device=device, dtype=torch.float), None
+    feed = torch.unsqueeze(one_hot, 0)
+    with torch.no_grad():
+        for i in range(n_chars - len(start_sequence)):
+            feed.unsqueeze(0)
+            y, h = model(feed, hidden_state=h)
+            probability = hot_softmax(y[0, -1, :], temperature=T)
+            indices = torch.multinomial(probability, 1)
+            out_text += idx_to_char[indices.item()]
+            one_hot = chars_to_onehot(out_text[-1], char_to_idx).to(device=device, dtype=torch.float)
+            feed = torch.unsqueeze(one_hot, 0)
     # ========================
 
     return out_text
