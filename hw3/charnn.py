@@ -258,7 +258,30 @@ class MultilayerGRU(nn.Module):
         #      then call self.register_parameter() on them. Also make
         #      sure to initialize them. See functions in torch.nn.init.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        for layer_idx in range(n_layers):
+            _in_dim = self.in_dim if layer_idx == 0 else self.h_dim
+            #create current layer params and their names
+            cur_layer_params_dict = {
+                f'w_xz_{layer_idx}': nn.Linear(_in_dim, self.h_dim, bias=False),
+                f'w_hz_{layer_idx}': nn.Linear(self.h_dim, self.h_dim, bias=True),
+                f'w_xr_{layer_idx}': nn.Linear(_in_dim, self.h_dim, bias=False),
+                f'w_hr_{layer_idx}': nn.Linear(self.h_dim, self.h_dim, bias=True),
+                f'w_xg_{layer_idx}': nn.Linear(_in_dim, self.h_dim, bias=False),
+                f'w_hg_{layer_idx}': nn.Linear(self.h_dim, self.h_dim, bias=True)
+            }
+
+            #register and save
+            for name, param in cur_layer_params_dict.items():
+                self.add_module(name, param)
+                self.layer_params.append(param)
+
+        #dropout and out
+        dropout_block = nn.Dropout(dropout)
+        self.add_module('dropout', dropout_block)
+        self.layer_params.append(dropout_block)
+        out = nn.Linear(self.h_dim, self.out_dim, bias=True)
+        self.add_module('out', out)
+        self.layer_params.append(out)
         # ========================
 
     def forward(self, input: Tensor, hidden_state: Tensor = None):
@@ -296,6 +319,31 @@ class MultilayerGRU(nn.Module):
         #  Tip: You can use torch.stack() to combine multiple tensors into a
         #  single tensor in a differentiable manner.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        dropout = getattr(self, f'dropout')
+        out = getattr(self, f'out')
+
+        for k in range(self.n_layers):
+            h = layer_states[k]
+            next_layer_inputs_list = list()
+            for t in range(seq_len):
+                x = layer_input[:, t, :]
+                w_xz = getattr(self, f'w_xz_{k}')
+                w_hz = getattr(self, f'w_hz_{k}')
+                w_xr = getattr(self, f'w_xr_{k}')
+                w_hr = getattr(self, f'w_hr_{k}')
+                w_xg = getattr(self, f'w_xg_{k}')
+                w_hg = getattr(self, f'w_hg_{k}')
+                z = torch.sigmoid(w_xz(x) + w_hz(h))
+                r = torch.sigmoid(w_xr(x) + w_hr(h))
+                g = torch.tanh(w_xg(x) + w_hg(r * h))
+                h = h * z + (1 - z) * g
+                next_layer_inputs_list.append(h)
+
+            pre_layer_input = torch.stack(next_layer_inputs_list, dim=1)
+            layer_input = dropout(pre_layer_input)
+            layer_states[k] = h
+
+        layer_output = out.forward(layer_input)
+        hidden_state = torch.stack(layer_states, dim=1)
         # ========================
         return layer_output, hidden_state
