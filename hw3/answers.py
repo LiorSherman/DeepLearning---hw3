@@ -22,7 +22,14 @@ def part1_rnn_hyperparams():
     )
     # TODO: Set the hyperparameters to train the model.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    hypers['batch_size'] = 256
+    hypers['seq_len'] = 64
+    hypers['h_dim'] = 512
+    hypers['n_layers'] = 3
+    hypers['dropout'] = 0.5
+    hypers['learn_rate'] = 0.001
+    hypers['lr_sched_factor'] = 0.5
+    hypers['lr_sched_patience'] = 2
     # ========================
     return hypers
 
@@ -32,7 +39,7 @@ def part1_generation_params():
     temperature = 0.0001
     # TODO: Tweak the parameters to generate a literary masterpiece.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    start_seq = "ALLS WELL THAT ENDS WELL"
     # ========================
     return start_seq, temperature
 

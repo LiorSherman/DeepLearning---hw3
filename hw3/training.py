@@ -93,7 +93,28 @@ class Trainer(abc.ABC):
             #  - Implement early stopping. This is a very useful and
             #    simple regularization technique that is highly recommended.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            prev_loss = 0
+            actual_num_epochs += 1
+            # train
+            epoch_train_loss, epoch_train_acc = train_result = self.train_epoch(dl_train, **kw)
+            # test
+            epoch_test_loss, epoch_test_acc = test_result = self.test_epoch(dl_test, **kw)
+            # add current results
+            train_loss.extend(epoch_train_loss)
+            train_acc.append(epoch_train_acc)
+            test_loss.extend(epoch_test_loss)
+            test_acc.append(epoch_test_acc)
+
+            # early stopping
+            if early_stopping is not None:
+                current_loss = torch.tensor(epoch_test_loss).mean().item()
+                if prev_loss != 0 and prev_loss <= current_loss:
+                    epochs_without_improvement += 1
+                    if epochs_without_improvement >= early_stopping:
+                        break
+                else:
+                    epochs_without_improvement = 0
+                prev_loss = current_loss
             # ========================
 
             # Save model checkpoint if requested
@@ -221,14 +242,14 @@ class RNNTrainer(Trainer):
     def train_epoch(self, dl_train: DataLoader, **kw):
         # TODO: Implement modifications to the base method, if needed.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.hidden_state = None
         # ========================
         return super().train_epoch(dl_train, **kw)
 
     def test_epoch(self, dl_test: DataLoader, **kw):
         # TODO: Implement modifications to the base method, if needed.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.hidden_state = None
         # ========================
         return super().test_epoch(dl_test, **kw)
 
@@ -246,7 +267,20 @@ class RNNTrainer(Trainer):
         #  - Update params
         #  - Calculate number of correct char predictions
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # init
+        self.optimizer.zero_grad()
+        # Forward pass
+        y_scores, self.hidden_state = self.model(x, self.hidden_state)
+        # Calculate total loss over sequence
+        loss = self.loss_fn(y_scores.transpose(1,2), y)
+        # Backward pass
+        loss.backward(retain_graph=True)
+        # Update params
+        self.optimizer.step()
+        # Calculate number of correct char predictions
+        y_pred = y_scores.argmax(dim=-1)
+        num_correct = (y == y_pred).sum()
+        self.hidden_state = self.hidden_state.detach()
         # ========================
 
         # Note: scaling num_correct by seq_len because each sample has seq_len
@@ -266,7 +300,13 @@ class RNNTrainer(Trainer):
             #  - Loss calculation
             #  - Calculate number of correct predictions
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            # Forward pass
+            y_scores, self.hidden_state = self.model(x, self.hidden_state)
+            # Calculate total loss over sequence
+            loss = self.loss_fn(y_scores.transpose(1, 2), y)
+            # Calculate number of correct char predictions
+            y_pred = y_scores.argmax(dim=-1)
+            num_correct = (y == y_pred).sum()
             # ========================
 
         return BatchResult(loss.item(), num_correct.item() / seq_len)
