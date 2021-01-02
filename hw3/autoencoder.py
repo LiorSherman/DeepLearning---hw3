@@ -19,7 +19,21 @@ class EncoderCNN(nn.Module):
         #  use pooling or only strides, use any activation functions,
         #  use BN or Dropout, etc.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        kernel_size = 5
+        k = [64, 128, 256, 512]
+        # choosing conv, activation, pooling and norm options.
+        conv = nn.Conv2d
+        activation = nn.LeakyReLU
+        norm = nn.BatchNorm2d
+
+        # unifying the list on input output channels
+        layers = [in_channels] + k + [out_channels]
+
+        # looping and creating modules, putting one pool in the end.
+        for in_, out_ in zip(layers, layers[1:]):
+            modules += [conv(in_, out_, kernel_size, padding=3, stride=3)]
+            modules += [norm(out_)]
+            modules += [activation(negative_slope=0.001)]
         # ========================
         self.cnn = nn.Sequential(*modules)
 
@@ -42,7 +56,21 @@ class DecoderCNN(nn.Module):
         #  output should be a batch of images, with same dimensions as the
         #  inputs to the Encoder were.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        kernel_size = 5
+        k = [512, 256, 128, 64]
+        # choosing conv, activation, pooling and norm options.
+        conv = nn.ConvTranspose2d
+        activation = nn.LeakyReLU
+        norm = nn.BatchNorm2d
+
+        # unifying the list on input output channels
+        layers = [in_channels] + k + [out_channels]
+
+        # looping and creating modules, putting one pool in the end.
+        for in_, out_ in zip(layers, layers[1:]):
+            modules += [conv(in_, out_, kernel_size, stride=2, padding=2, output_padding=1)]
+            modules += [norm(out_)]
+            modules += [activation(negative_slope=0.001)]
         # ========================
         self.cnn = nn.Sequential(*modules)
 
