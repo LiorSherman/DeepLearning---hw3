@@ -20,10 +20,10 @@ class EncoderCNN(nn.Module):
         #  use BN or Dropout, etc.
         # ====== YOUR CODE: ======
         kernel_size = 5
-        k = [64, 128, 256, 512]
+        k = [64, 128, 256]
         # choosing conv, activation, pooling and norm options.
         conv = nn.Conv2d
-        activation = nn.LeakyReLU
+        activation = nn.ReLU
         norm = nn.BatchNorm2d
 
         # unifying the list on input output channels
@@ -31,9 +31,9 @@ class EncoderCNN(nn.Module):
 
         # looping and creating modules, putting one pool in the end.
         for in_, out_ in zip(layers, layers[1:]):
-            modules += [conv(in_, out_, kernel_size, padding=3, stride=3)]
+            modules += [conv(in_, out_, kernel_size, padding=2, stride=2)]
+            modules += [activation()]
             modules += [norm(out_)]
-            modules += [activation(negative_slope=0.001)]
         # ========================
         self.cnn = nn.Sequential(*modules)
 
@@ -57,10 +57,10 @@ class DecoderCNN(nn.Module):
         #  inputs to the Encoder were.
         # ====== YOUR CODE: ======
         kernel_size = 5
-        k = [512, 256, 128, 64]
+        k = [256, 128, 64]
         # choosing conv, activation, pooling and norm options.
         conv = nn.ConvTranspose2d
-        activation = nn.LeakyReLU
+        activation = nn.ReLU
         norm = nn.BatchNorm2d
 
         # unifying the list on input output channels
@@ -69,8 +69,8 @@ class DecoderCNN(nn.Module):
         # looping and creating modules, putting one pool in the end.
         for in_, out_ in zip(layers, layers[1:]):
             modules += [conv(in_, out_, kernel_size, stride=2, padding=2, output_padding=1)]
+            modules += [activation()]
             modules += [norm(out_)]
-            modules += [activation(negative_slope=0.001)]
         # ========================
         self.cnn = nn.Sequential(*modules)
 
@@ -98,7 +98,10 @@ class VAE(nn.Module):
 
         # TODO: Add more layers as needed for encode() and decode().
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # adding affine transformations.
+        self.add_module("mu", nn.Linear(n_features, self.z_dim))
+        self.add_module("log_sigma2", nn.Linear(n_features, self.z_dim))
+        self.add_module("rec", nn.Linear(self.z_dim, n_features))
         # ========================
 
     def _check_features(self, in_size):
@@ -119,7 +122,12 @@ class VAE(nn.Module):
         #     log_sigma2 (mean and log variance) of q(Z|x).
         #  2. Apply the reparametrization trick to obtain z.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        h = self.features_encoder(x)
+        h = h.reshape((x.shape[0], -1))
+        mu = self.mu(h)
+        log_sigma2 = self.log_sigma2(h)
+        u = torch.normal(torch.zeros_like(mu), torch.ones_like(mu))
+        z = mu + log_sigma2.exp() * u.cuda()
         # ========================
 
         return z, mu, log_sigma2
@@ -130,7 +138,9 @@ class VAE(nn.Module):
         #  1. Convert latent z to features h with a linear layer.
         #  2. Apply features decoder.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        z = self.rec(z)
+        z = z.reshape(z.size(0), *self.features_shape)
+        x_rec = self.features_decoder(z)
         # ========================
 
         # Scale to [-1, 1] (same dynamic range as original images).
@@ -149,7 +159,8 @@ class VAE(nn.Module):
             #    Instead of sampling from N(psi(z), sigma2 I), we'll just take
             #    the mean, i.e. psi(z).
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            z = torch.randn((n, self.z_dim), device=device)
+            samples = self.decode(z)
             # ========================
 
         # Detach and move to CPU for display purposes
@@ -182,7 +193,11 @@ def vae_loss(x, xr, z_mu, z_log_sigma2, x_sigma2):
     #  1. The covariance matrix of the posterior is diagonal.
     #  2. You need to average over the batch dimension.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    N = x.shape[0]
+    dz = z_mu.shape[1]
+    data_loss = ((1 / x_sigma2) * nn.MSELoss()(x, xr))
+    kldiv_loss = (pow((z_mu.norm()), 2) + (torch.exp(z_log_sigma2)).sum() - (z_log_sigma2.sum())) / N - dz
+    loss = data_loss + kldiv_loss
     # ========================
 
     return loss, data_loss, kldiv_loss
