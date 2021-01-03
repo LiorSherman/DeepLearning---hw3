@@ -68,9 +68,9 @@ class DecoderCNN(nn.Module):
 
         # looping and creating modules, putting one pool in the end.
         for in_, out_ in zip(layers, layers[1:]):
-            modules += [conv(in_, out_, kernel_size, stride=2, padding=2, output_padding=1)]
+            modules += [norm(in_)]
             modules += [activation()]
-            modules += [norm(out_)]
+            modules += [conv(in_, out_, kernel_size, stride=2, padding=2, output_padding=1)]
         # ========================
         self.cnn = nn.Sequential(*modules)
 
