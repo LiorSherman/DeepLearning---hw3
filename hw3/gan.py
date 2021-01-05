@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from typing import Callable
 from torch.utils.data import DataLoader
 from torch.optim.optimizer import Optimizer
+from hw3.autoencoder import EncoderCNN, DecoderCNN
 
 
 class Discriminator(nn.Module):
@@ -19,7 +20,11 @@ class Discriminator(nn.Module):
         #  You can then use either an affine layer or another conv layer to
         #  flatten the features.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        c, h, w = in_size
+        output = 1024
+        new_size = output * h // 2 ** 4 * w // 2 ** 4
+        self.encoder = EncoderCNN(in_size[0], output)
+        self.disc = nn.Linear(new_size, 1)
         # ========================
 
     def forward(self, x):
@@ -32,7 +37,9 @@ class Discriminator(nn.Module):
         #  No need to apply sigmoid to obtain probability - we'll combine it
         #  with the loss due to improved numerical stability.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        h = self.encoder(x)
+        h = h.view(x.size(0), -1)
+        y = self.disc(h)
         # ========================
         return y
 
@@ -53,7 +60,9 @@ class Generator(nn.Module):
         #  section or implement something new.
         #  You can assume a fixed image size.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.decoder = DecoderCNN(1024, out_channels)
+        self.img_size = (1024, featuremap_size, featuremap_size)
+        self.linear = nn.Linear(z_dim, 1024 * (featuremap_size ** 2))
         # ========================
 
     def sample(self, n, with_grad=False):
@@ -70,7 +79,9 @@ class Generator(nn.Module):
         #  Generate n latent space samples and return their reconstructions.
         #  Don't use a loop.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        with torch.set_grad_enabled(with_grad):
+            z = torch.randn((n, self.z_dim), device=device)
+            samples = self.forward(z)
         # ========================
         return samples
 
@@ -84,7 +95,8 @@ class Generator(nn.Module):
         #  Don't forget to make sure the output instances have the same
         #  dynamic range as the original (real) images.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        x = self.linear(z)
+        x = self.decoder(x.view(x.shape[0], *self.img_size))
         # ========================
         return x
 
