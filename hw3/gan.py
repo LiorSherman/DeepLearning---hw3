@@ -20,11 +20,24 @@ class Discriminator(nn.Module):
         #  You can then use either an affine layer or another conv layer to
         #  flatten the features.
         # ====== YOUR CODE: ======
-        c, h, w = in_size
-        output = 1024
-        new_size = output * h // 2 ** 4 * w // 2 ** 4
-        self.encoder = EncoderCNN(in_size[0], output)
-        self.disc = nn.Linear(new_size, 1)
+        layers = []
+        in_channel, H, W = in_size
+        in_size = 1024 * (H // 16) * (W // 16)
+        self.flatten = nn.Linear(in_size, 1)
+
+        k = [128, 256, 512, 1024]
+        filters = [in_channel] + k
+
+        conv = nn.Conv2d
+        activation = nn.ReLU
+        norm = nn.BatchNorm2d
+
+        for in_, out_ in zip(filters, filters[1:]):
+            layers += [conv(in_, out_, kernel_size=5, stride=2, padding=2)]
+            layers += [norm(out_)]
+            layers += [activation()]
+
+        self.encoder = nn.Sequential(*layers)
         # ========================
 
     def forward(self, x):
@@ -39,7 +52,7 @@ class Discriminator(nn.Module):
         # ====== YOUR CODE: ======
         h = self.encoder(x)
         h = h.view(x.size(0), -1)
-        y = self.disc(h)
+        y = self.flatten(h)
         # ========================
         return y
 
