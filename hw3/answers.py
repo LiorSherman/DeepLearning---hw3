@@ -45,55 +45,43 @@ def part1_generation_params():
 
 
 part1_q1 = r"""
-**Your answer:**
-
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+We split the corpus into sequences due to the following reasons:
+1.  Not exhausting our memory resources: for each char in the corpus we create a one hot vector in a length of all 
+    chars in the corpus. Not splitting the corpus into sequences will result in a huge matrix that might not fit the
+    entire memory.
+2.  Splitting the whole corpus into sequences makes the batches data-independent in a some sense, and adds a layer of 
+    "creativity" to the training process. Thus preventing the model overfit the corpus itself
 """
 
 part1_q2 = r"""
-**Your answer:**
-
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+The generated text shows memory longer than the sequence length because the output of every epoch is not only dependant
+on the input, but also on the hidden state which is a result of the previous stages thus it acts as our memory in a way.
 """
 
 part1_q3 = r"""
-**Your answer:**
-
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+We are not shuffling the order of batches when training, because despite previous models that we learnt on, where the
+order of the samples wasn't important at all. For new chars the RNN needs to be able to learn from the previous ones, 
+and to be able to see the logical connection between them, in order to create the correct patterns. Thus shuffeling 
+the order will interfere the training process and will result in creating the wrong patterns.
 
 """
 
 part1_q4 = r"""
 **Your answer:**
+1.  The temperature, as explained in the excersise is a hyper parameter that controls the variance of the distribution
+for the next char in conditioned on the current one and the current state of the model. Low temperature value leads to 
+a lower variance, thus resulting in maximising the chances of choosing the correct answer. In another words it maximising
+the chances of our model to over fit the training data.  
+When sampling we would like to choose lower temperature, since in that stage, and assuming our model is well trained, 
+we do want the model to generate the answer it thinks most fit.
 
+2.  Choosing higher values of temperature will lead to higher variance of the next char distribution, which means higher
+chances for choosing random chars, resulting in more made up words and more spelling mistakes. The model will be more
+"creative" in a way.
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+3.  Choosing lower values of temperature will lead to lower variance of the next char distribution, which means 
+more confidence in choosing character which results in better spelling, however in less diversity in the generated text.
+The model will be more "conservative" in a way.
 """
 # ==============
 
