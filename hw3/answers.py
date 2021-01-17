@@ -196,42 +196,42 @@ def part3_gan_hyperparams():
 
 
 part3_q1 = r"""
-**Your answer:**
-
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+The GAN as we saw consists out of 2 parts - discriminator and generator. 
+During the training process of both of them we generate fake data using the generator and feed it
+into the discriminator along with real data in order to discriminate between them.
+The discriminator simply behaves as a classifier and during that phase we keep the generator constant (we don't keep the 
+generator gradients) in order to "help" the discriminator to converge and to allow it to learn the generator flaws.
+During the generator training phase we need to keep of course its gradients in each step, but also we keep the
+discriminator gradients as we want to backpropagate all the way from very end of the entire model, which is the 
+discriminator output.  
 """
 
 part3_q2 = r"""
-**Your answer:**
-
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+1.  No, we shouldn't decide stopping training solely based on the generator loss as the it's score depends on the 
+    discriminator performance: If the discriminator isn't accurate enough and the generator loss is very low it simply 
+    means that the generator is performing well in fooling the discriminator. But since, the discriminator is doing a 
+    lousy job in the first place, it doesn't mean that in overall the entire model is performing good enough.
+2.  This means that the discriminator is ahead of the generator training wise. In other words it tells us that the 
+    discriminator can easily tell the difference between the real and the generated data. While that, the generator 
+    is trying to "catch" the discriminator and is learning from the results it provides
 """
 
 part3_q3 = r"""
-**Your answer:**
-
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+First, while the VAE and the GAN are similiar in their abilities to create new generated data, similiar to existing 
+real one, they are very different in the approach they both take to achieve that goal. While the VAE learning approach 
+is to compress the data correctly in order to be able to reconstruct it later, meaning it focuses directly on the data.
+The GAN approach is to train a "cop" in a way so it will be able to distinguish between real and fake data, along 
+with training a "counterfeiter" so it will be able to fool the cop and vice versa. Meaning, its approach is to create
+a competition between the two adversaries so the focusing on the data is indirect in some sense.
+We can see that in the VAE we got slightly better results due to the reasons above. Also we can see that because the VAE
+focuses directly on the pictures, it also learned to distinguish meaningful areas such as the face part and to ignore
+the background parts. Thats why the background parts are more blurry in the VAE and the face is much more precise, while
+in the GAN there is much more similiarity (for better, but also mostly for worse) in the different parts of the generated
+pictures.
+Another possible reason for the poorer results in the GAN (compared to the VAE) since its training process is hard.
+The generator and the discriminator are constantly trying to improve on the cost of each other so we can think at it
+as trying to shoot at a moving target rather then the typical and constant training process of models we learned so far, including 
+the VAE among them. 
 """
 
 # ==============
