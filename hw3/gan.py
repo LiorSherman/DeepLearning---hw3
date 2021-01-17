@@ -73,9 +73,24 @@ class Generator(nn.Module):
         #  section or implement something new.
         #  You can assume a fixed image size.
         # ====== YOUR CODE: ======
-        self.decoder = DecoderCNN(1024, out_channels)
-        self.img_size = (1024, featuremap_size, featuremap_size)
-        self.linear = nn.Linear(z_dim, 1024 * (featuremap_size ** 2))
+
+        conv = nn.ConvTranspose2d
+        activation = nn.LeakyReLU
+        norm = nn.BatchNorm2d
+
+        k = [1024, 512, 256, 128]
+        self.img_size = (k[0], featuremap_size, featuremap_size)
+        layers = []
+        for in_, out_ in zip(k, k[1:]):
+            layers += [conv(in_, out_, stride=2, kernel_size=5, padding=2, output_padding=1)]
+            layers += [norm(out_)]
+            layers += [activation()]
+
+        layers += [nn.ConvTranspose2d(k[-1], out_channels, stride=2, kernel_size=5, padding=2, output_padding=1)]
+        layers += [nn.Tanh()]
+
+        self.decoder = nn.Sequential(*layers)
+        self.linear = nn.Linear(z_dim, featuremap_size ** 2 * k[0])
         # ========================
 
     def sample(self, n, with_grad=False):
