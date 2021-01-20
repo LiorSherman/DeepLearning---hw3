@@ -68,7 +68,7 @@ the order will interfere the training process and will result in creating the wr
 
 part1_q4 = r"""
 **Your answer:**
-1.  The temperature, as explained in the excersise is a hyper parameter that controls the variance of the distribution
+1.  The temperature, as explained in the exercise is a hyper parameter that controls the variance of the distribution
 for the next char in conditioned on the current one and the current state of the model. Low temperature value leads to 
 a lower variance, thus resulting in maximising the chances of choosing the correct answer. In another words it maximising
 the chances of our model to over fit the training data.  
@@ -171,7 +171,7 @@ def part3_gan_hyperparams():
     )
     # TODO: Tweak the hyperparameters to train your GAN.
     # ====== YOUR CODE: ======
-    hypers['batch_size'] = 32
+    hypers['batch_size'] = 8
     hypers['z_dim'] = 4
     hypers['label_noise'] = 0.2
     hypers['data_label'] = 1
