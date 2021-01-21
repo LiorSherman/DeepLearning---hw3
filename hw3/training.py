@@ -93,12 +93,18 @@ class Trainer(abc.ABC):
             #  - Implement early stopping. This is a very useful and
             #    simple regularization technique that is highly recommended.
             # ====== YOUR CODE: ======
-            prev_loss = 0
+            print(3)
             actual_num_epochs += 1
             # train
             epoch_train_loss, epoch_train_acc = train_result = self.train_epoch(dl_train, **kw)
             # test
             epoch_test_loss, epoch_test_acc = test_result = self.test_epoch(dl_test, **kw)
+
+            if len(test_loss) >= len(epoch_test_loss):
+                prev_epoch_loss = test_loss[len(test_loss) - len(epoch_test_loss):]
+                prev_loss = torch.tensor(prev_epoch_loss).mean().item()
+            else:
+                prev_loss = None
             # add current results
             train_loss.extend(epoch_train_loss)
             train_acc.append(epoch_train_acc)
@@ -108,13 +114,14 @@ class Trainer(abc.ABC):
             # early stopping
             if early_stopping is not None:
                 current_loss = torch.tensor(epoch_test_loss).mean().item()
-                if prev_loss != 0 and prev_loss <= current_loss:
+                if prev_loss!= None:
+                    print(f'prev, curr = ({prev_loss} {current_loss} - {current_loss <= prev_loss * 0.90})')
+                if prev_loss != None and not (current_loss <= prev_loss * 0.90):
                     epochs_without_improvement += 1
-                    if epochs_without_improvement >= early_stopping:
+                    if epochs_without_improvement >= early_stopping :
                         break
                 else:
                     epochs_without_improvement = 0
-                prev_loss = current_loss
             # ========================
 
             # Save model checkpoint if requested
